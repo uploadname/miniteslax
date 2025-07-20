@@ -1,0 +1,193 @@
+/* COMENTARIOS */
+#comments ol.children:before{
+    content:""!important;
+}
+
+#comments .nav-links{
+    display: flex;
+    justify-content: space-between;
+    margin: 24px 0;
+}
+
+#comments .comment-meta{
+    display: flex;
+    gap: 24px;
+    font-size: 13px!important;
+    -webkit-margin-after: 0.9rem;
+    margin-block-end: 0.9rem;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+#comments .comment-meta .says{
+    display: none;
+}
+
+/* #comments .comment-metadata {
+    transform: translate(0, -3px);
+} */
+
+#comments .comment-content p{
+    line-height: 1.5!important;
+    font-size: 16px;
+    font-family: Arial, Helvetica, sans-serif!important;
+    font-weight: 500!important;
+    letter-spacing: 0px!important;
+    font-style: normal!important;
+}
+
+#comments .reply, #comments .edit-link{
+    font-size: 16px!important;
+    font-weight: 700!important;
+    text-decoration: underline;
+}
+
+#comments .edit-link{
+    margin-left: 20px;
+}
+
+#comments .children {
+    -webkit-padding-start: 30px;
+    padding-inline-start: 60px;
+}
+
+#comments .form-submit{
+    margin-bottom: 30px;
+}
+
+
+
+
+
+
+/*RECAPTCHA*/
+.grecaptcha-badge{
+	visibility:hidden;
+}
+
+
+/* GENERALES */
+input[type=submit], #comments .nav-links .nav-previous, #comments .nav-links .nav-next {
+    display: flex;
+    width: 164px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 700;
+    color: white;
+    background-color: #0066cc;
+    border-radius: 21px;
+    border: none;
+}
+
+input[type=submit]:hover, input[type=submit]:active {
+    background-color: #55aaff;
+}
+
+
+.blue_text_hover p{
+    transition: color 0.4s, transform 0.2s;
+}
+
+.blue_text_hover:hover{
+    transform: scale(1.02);
+}
+
+.blue_text_hover:hover p{
+    color: #0e94ce!important;
+}
+
+
+
+/* CABECERA */
+#header_elementor_fixed .jet-menu-container ul.jet-menu{
+    flex-wrap: nowrap!important;
+}
+
+.megamenu_elementor .icon_label_account .jet-menu-title:before{
+    content: url('assets/icon/account_circle.svg');
+    height: 24px;
+    margin-right: 8px;
+}
+
+.megamenu_elementor .icon_label_account .jet-menu-title{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.megamenu_elementor .menu_icon_items .jet-menu-link-text .jet-custom-item-label:before{
+    content: url('assets/icon/arrow_right.svg');
+    align-self: flex-start;
+    height: 24px;
+    transform: translate(0, -1px);
+}
+
+.megamenu_elementor .menu_icon_items .jet-menu-link-text .jet-custom-item-label{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+
+
+
+/* CONTACT FORM */
+
+.wpcf7.js p{
+    margin: 0!important;
+}
+
+.wpcf7.js input[type=text], .wpcf7.js input[type=email], .wpcf7.js textarea{
+    border-radius: 0px!important;
+    border: 1px solid #d2d2d2!important;
+    margin-bottom: 20px;
+}
+.wpcf7.js input[type=submit]{
+    margin: 30px 0px;
+    text-transform: uppercase!important;
+}
+
+
+
+/* PAGINA POR DEFECTO */
+
+.elementor-widget-theme-post-content h4{
+    color: #333333;
+    font-size: 25px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0px;
+    font-style: normal;
+}
+
+.elementor-widget-theme-post-content h3{
+    color: #333333;
+    font-size: 27px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0px;
+    font-style: normal;
+    margin-top: 1em;
+    margin-bottom: 1em;
+
+}
+
+.elementor-widget-theme-post-content h2{
+    color: #333333;
+    font-size: 18px!important;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0px;
+    font-style: normal;
+    margin-bottom: 0px!important;
+}
+
+.elementor-widget-theme-post-content p{
+    font-size: 18px;
+    color: #000000;
+}
