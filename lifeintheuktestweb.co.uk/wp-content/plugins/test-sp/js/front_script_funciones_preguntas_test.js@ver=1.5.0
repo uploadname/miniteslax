@@ -1,0 +1,715 @@
+jQuery(document).ready(function($) {
+    /* CONTADOR */
+    var initialTime = parseInt(time) * 60 || 45 * 60; // 45 minutos por defecto
+
+    var currentTime = initialTime;
+
+    function updateCountdown() {
+        var minutes = Math.floor(currentTime / 60);
+        var seconds = currentTime % 60;
+
+        $('#countdown-timer').text(
+            minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0')
+        );
+
+        var percentageComplete = (currentTime / initialTime) * 100;
+
+        $('.countdown-rectangle').css('width', percentageComplete + '%');
+
+        if (currentTime <= 0) {
+            show_result();
+        } else {
+            currentTime--;
+        }
+    }
+
+
+    // Inicia la cuenta regresiva
+    updateCountdown();
+    var countdownInterval = setInterval(updateCountdown, 1000);
+    
+
+    /* CAMBIOS DE PREGUNTAS */
+    $('.container_question:first').slideDown( "fast", function() {
+        $('.container_question:first').addClass("active")
+        $('.container_question:first').css("display",'')
+    });
+    $('.question_button:first').addClass("selected")
+    $('#btn_previous').prop('disabled', true);
+    $('#btn_finish').hide();
+    $("#current_question_text").html('Question <b>1</b> of <b>'+question_quantity+'</b>')
+
+
+    $(".question_button").on("click", function(){
+        let id_question = $(this).data("id_question")
+
+        if( $(this).is(":first-child") )
+            $('#btn_previous').prop('disabled', true);
+        else
+            $('#btn_previous').prop('disabled', false);
+
+        if( $(this).hasClass("good") || $(this).hasClass("bad") ){
+            $('#btn_review_question').prop('disabled', true);
+
+            if( $(this).is(":last-child") ){
+                $('#btn_next').prop('disabled', true);
+                $('#btn_next').hide();
+                $('#btn_check').prop('disabled', true);
+                $('#btn_check').hide();
+                $('#btn_finish').prop('disabled', false);
+                $('#btn_finish').show();
+            }
+            else{
+                $('#btn_next').prop('disabled', false);
+                $('#btn_next').show();
+                $('#btn_check').prop('disabled', true);
+                $('#btn_check').hide();
+                $('#btn_finish').prop('disabled', true);
+                $('#btn_finish').hide();
+            }
+        }
+        else{
+            $('#btn_review_question').prop('disabled', false);
+
+            $('#btn_next').prop('disabled', true);
+            $('#btn_next').hide();
+            $('#btn_check').prop('disabled', false);
+            $('#btn_check').show();
+            $('#btn_finish').prop('disabled', true);
+            $('#btn_finish').hide();
+        }
+
+
+
+
+
+        $(".question_button").removeClass('selected')
+        $(this).addClass('selected')
+
+        $(".container_question").removeClass("active");
+
+        $('.container_question[data-id_question="'+id_question+'"]').addClass("active")
+
+        $("#current_question_text").html('Question <b>'+(Number(id_question.replace('p', ''))+1)+'</b> of <b>'+question_quantity+'</b>')
+    })
+    
+    function scroll_next_previus(){
+        if($(window).scrollTop() > ($('.container_question.active').find('.question').offset().top)){ // + $('.header_elementor_fixed').outerHeight()
+            jQuery('html, body').animate({
+                scrollTop: $('.container_question.active').find('.question').offset().top - ($('#header_elementor_fixed').outerHeight())
+            }, 50);
+        }
+    }
+
+    /* BOTONES SIGUIENTE Y previous */
+    $("#btn_next").on("click", function(){
+        let id_question = $('.container_question.active').data("id_question").replace('p', '');
+        scroll_next_previus();
+        $('.question_button[data-id_question="p'+(Number(id_question)+1)+'"]').click();
+    })
+
+    $("#btn_review_question").on("click", function(){
+        let id_question = $('.container_question.active').data("id_question").replace('p', '')
+        $('.question_button[data-id_question="p'+(Number(id_question))+'"]').toggleClass('review_question');
+    })
+
+    $("#btn_previous").on("click", function(){
+        scroll_next_previus()
+        let id_question = $('.container_question.active').data("id_question").replace('p', '')
+        $('.question_button[data-id_question="p'+(Number(id_question)-1)+'"]').click();
+    })
+
+    $("#btn_finish").on("click", function(){
+        show_result()
+    })
+
+    $("#btn_view_questions").on("click", function(){
+        $('#container_test').slideToggle();
+    })
+
+    $("#btn_restart_test").on("click", function(){
+        $("html, body").animate({
+            scrollTop: 0
+        }, 100, function() { 
+            setTimeout(function() {
+                location.reload();
+            }, 100)
+        });
+    })
+
+    let good = 0;
+    let bad = 0;
+
+    /* BOTON DE CHECK */
+    $("#btn_check").on("click", function(){
+        let current_id_question = $('.container_question.active').data("id_question");
+        $('#btn_review_question').prop('disabled', true);
+
+        if( $('.question_button.selected').is(":last-child") ){
+            $('#btn_next').prop('disabled', true);
+            $('#btn_next').hide();
+            $('#btn_check').prop('disabled', true);
+            $('#btn_check').hide();
+            $('#btn_finish').prop('disabled', false);
+            $('#btn_finish').show();
+        }
+        else{
+            $('#btn_next').prop('disabled', false);
+            $('#btn_next').show();
+            $('#btn_check').prop('disabled', true);
+            $('#btn_check').hide();
+            $('#btn_finish').prop('disabled', true);
+            $('#btn_finish').hide();
+        }
+
+        event_check_question(current_id_question)
+    })
+
+    function event_check_question(current_id_question){
+        if(!$('.question_button[data-id_question="'+current_id_question+'"]').hasClass("good") && !$('.question_button[data-id_question="'+current_id_question+'"]').hasClass("bad")){
+            let current_solution = solution[current_id_question].split(",");
+            let current_answers_checked = $('.container_question[data-id_question='+current_id_question+']').find("input:checked");
+            let selectedAnswers = [];
+    
+            for (let answer_checked of current_answers_checked) {
+                let id_answer = $(answer_checked).data("id_answer");
+                selectedAnswers.push(id_answer);
+            }
+
+            if (arraysEqualUnordered(current_solution, selectedAnswers)) {
+                $('.question_button[data-id_question="'+current_id_question+'"]').addClass("good");
+                show_well_answered(current_id_question, current_solution);
+                good++;
+                see_explication(current_id_question, "Correct");
+            } else {
+                $('.question_button[data-id_question="'+current_id_question+'"]').addClass("bad");
+                show_badly_answered(current_id_question);
+                show_well_answered(current_id_question, current_solution);
+                bad++;
+                see_explication(current_id_question, "Incorrect");
+            }
+            block_checks(current_id_question);
+
+            $('.question_button[data-id_question="'+current_id_question+'"]').addClass("answered");
+        }
+    }
+
+
+    /* FUNCION PARA COMPARAR DOS ARRAYS */
+    function arraysEqualUnordered(arr1, arr2) {
+        if (arr1.length !== arr2.length) return false;
+        const sortedArr1 = arr1.slice().sort();
+        const sortedArr2 = arr2.slice().sort();
+        for (let i = 0; i < sortedArr1.length; i++) {
+            if (sortedArr1[i] !== sortedArr2[i]) return false;
+        }
+        return true;
+    }
+
+    /* FUNCION PARA DEJAR MARCADA O NO UNA PREGUNTA */
+    $('#container_test .container_question input').on('change', function() {
+        var container = $(this).closest('.container_question');
+        var id_question = container.data('id_question');
+        var checkboxesChecked = container.find('input:checked').length;
+        if (checkboxesChecked != 0) 
+            $('.question_button[data-id_question="'+id_question+'"]').addClass("answered");
+        else
+            $('.question_button[data-id_question="'+id_question+'"]').removeClass("answered");
+    });
+
+    /* FUNCION PARA BLOQUEAR TODOS LOS CHECKS DE UNA PREGUNTA */
+    function block_checks(id_question){
+        $('.container_question[data-id_question="'+id_question+'"]').find('input').prop('disabled', true);
+    }
+
+    /* FUNCION PARA VER LA EXPLICACION */
+    function see_explication(id_question, correct_incorrect){
+        $('.container_question[data-id_question="'+id_question+'"]').find('div.container_response_correct_incorrect').html("<b>"+correct_incorrect+"</b>");
+        $('.container_question[data-id_question="'+id_question+'"]').find('div.container_explication').show();
+    }
+
+    /* FUNCION PARA MARCAR LAS PREGUNTAS ERRONEAS */
+    function show_badly_answered(id_question){
+        $('.container_question[data-id_question="'+id_question+'"]').find('input:checked').parent().addClass("bad");
+    }
+
+    /* FUNCION PARA MARCAR LAS PREGUNTAS CORRECTAS */
+    function show_well_answered(id_question, current_solution){
+        for (let sol of current_solution) {
+            $('.container_question[data-id_question="'+id_question+'"]').find('input[data-id_answer="'+sol+'"]').parent().addClass("good");
+        }
+    }
+
+    /* TEST FINALIZADO */
+    function show_result(){
+        $('html, body').animate({
+            scrollTop: 0
+        }, 1000);
+
+        clearInterval(countdownInterval);
+
+        $('#container_button_check_answer').hide();
+        $('#container_buttons_next_previous').hide();
+        $('#container_test').hide();
+        $('#container_test').prepend("<p style='margin-top: 12px; margin-bottom:0px;'>Click on the question numbers</p>");
+        $('.countdown-container').hide();
+
+        $('#loading_screen').fadeIn("fast");
+        
+        var questions_not_answered = $('.question_button:not(.answered)');
+        questions_not_answered.each(function() {
+            $(this).addClass('bad');
+            $(this).addClass('answered');
+            let current_id_question = $(this).data("id_question");
+            let current_solution = solution[current_id_question].split(",");
+            show_well_answered(current_id_question, current_solution);
+            see_explication(current_id_question, "Incorrect");
+            block_checks(current_id_question);
+            bad++;
+        });
+
+        var questions_not_checked = $('.question_button.answered:not(.good):not(.bad)');
+        questions_not_checked.each(function() {
+            let id_question = $(this).data("id_question");
+            event_check_question(id_question)
+            // $(this).addClass('answered');
+        });
+
+        $('.container_test').find('input').prop('disabled', true);
+
+
+        var review_questions = $('.question_button.answered.review_question');
+        review_questions.each(function() {
+            $(this).removeClass('good');
+            $(this).removeClass('bad');
+        });
+
+
+
+        // var data_graficos = [];
+        var label_names = {};
+        var color_names = {};
+        var aciertos = {};
+        var cantidad = {};
+
+
+
+
+
+
+        // Inicializa el conteo de preguntas en cada subcategoría
+        Object.keys(all_question_categories).forEach(categoryId => {
+            let category = all_question_categories[categoryId];
+            category.question_count = 0;
+            Object.keys(category.children).forEach(subCategoryId => {
+                // Inicializa el conteo en 0
+                // category.children[subCategoryId] = { name: category.children[subCategoryId], question_count: 0, question_good_count: 0};
+                category.children[subCategoryId].question_count = 0;
+                category.children[subCategoryId].question_good_count = 0.
+            }); //
+        });
+
+        // Recorre todas las preguntas para actualizar el conteo
+        let html_stat_chart_js = '';
+        $('.question_button').each(function() {
+            let currentSubCategoryId = $(this).data("category").toString();
+            let is_good_answered = $(this).hasClass("good");
+
+            // Encuentra la categoría y subcategoría correspondiente y actualiza el conteo
+            Object.keys(all_question_categories).forEach(categoryId => {
+                let category = all_question_categories[categoryId];
+                if (category.children[currentSubCategoryId]) {
+                    category.question_count++;
+                    category.children[currentSubCategoryId].question_count++;
+                    if(category.question_count == 1){
+                        //html_stat_chart_js += `<div class="container_canvas"><canvas class="pie" data-category="${category.children[currentSubCategoryId].name}"></canvas><span>${all_question_categories[categoryId].name}</span></div>`;
+                        
+                    }
+                    if(category.children[currentSubCategoryId].question_count == 1){
+
+                    }
+                    if(is_good_answered){
+                        category.children[currentSubCategoryId].question_good_count++;
+                    }
+                }
+            });
+        });
+
+
+
+        // Inicializa el conteo de preguntas en cada subcategoría
+        function ordenarPorIndice(objeto) {
+            // Ordenar el objeto principal por índice.
+            let itemsOrdenados = Object.values(objeto).sort((a, b) => a.index - b.index);
+        
+            return itemsOrdenados.map(item => {
+                if (item.children) {
+                    // Si hay subcategorías, ordenarlas también.
+                    item.children = ordenarPorIndice(item.children);
+                }
+                return item;
+            });
+        }
+        
+        // Ordenar las categorías y subcategorías.
+        let categoriasOrdenadas = ordenarPorIndice(all_question_categories);
+        
+        categoriasOrdenadas.forEach(category => {
+            let array_nombres_subcategorias = [];
+            let array_colores_subcategorias = [];
+            let array_aciertos_subcategorias = [];
+            let num_fallos_subcategorias = 0;
+            let array_preguntas_subcategorias = [];
+        
+            if(category.question_count >= 1){
+                category.children.forEach(subCategory => {
+                    array_nombres_subcategorias.push(subCategory.name)
+                    array_aciertos_subcategorias.push(subCategory.question_good_count)
+                    array_preguntas_subcategorias.push(subCategory.question_count)
+                    let color_categoria_no_undefined = subCategory.color == undefined ? "#000000" : subCategory.color;
+                    array_colores_subcategorias.push(color_categoria_no_undefined)
+                    
+                    num_fallos_subcategorias += (subCategory.question_count - subCategory.question_good_count);
+                });
+        
+                array_aciertos_subcategorias.push(num_fallos_subcategorias)
+        
+                label_names[category.name] = array_nombres_subcategorias;
+                color_names[category.name] = array_colores_subcategorias;
+                aciertos[category.name] = array_aciertos_subcategorias;
+                cantidad[category.name] = array_preguntas_subcategorias;
+        
+                html_stat_chart_js += `<div class="container_canvas"><canvas class="pie" data-category="${category.name}"></canvas><p class="nombre_categoria">${category.name}: </p></div>`;
+            }
+        });
+
+
+
+
+        function load_chart_js(callback){
+            var script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = "https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js";
+    
+            script.onload = function(){
+                if(callback) callback();
+            }
+    
+            document.head.appendChild(script);
+        }
+
+
+        $('.container_question').addClass("active")
+        $(".question_button").removeClass('selected')
+        $("#current_question_text").remove()
+        $(".question_button").off("click")
+
+        $(".question_button").on("click", function(){
+            let id_question = $(this).data("id_question")
+            $(".question_button").removeClass('selected')
+            $(this).addClass('selected')
+    
+            let targetElement = $('.container_question[data-id_question="' + id_question + '"]');
+            
+            if (targetElement.length) {
+                let targetOffset = targetElement.offset().top;
+                $('html, body').animate({
+                    scrollTop: targetOffset-120
+                }, 1000);
+            }
+        
+        })
+
+
+        $.ajax({
+            type: "post",
+            url: ajax_var.url,
+            data: "action=" + ajax_var.action + "&nonce=" + ajax_var.nonce + "&id_test=" + id_test + "&good=" + good + "&bad=" + bad,
+            beforeSend: function() {
+            },
+            success : function(data) {
+                let parsed_data = JSON.parse(data);
+                if(parsed_data.s != 1){
+                    good = parsed_data.g;
+                }
+
+                $('#loading_screen').fadeOut("fast");
+
+                $('#container_results').fadeIn("fast");
+        
+                $('#container_answered_correctly').html("<b>" + good + "</b> of <b>" + question_quantity + "</b> questions answered correctly ("+Math.round((good/question_quantity)*100)+"%)");
+        
+                var user_currentTime = initialTime - currentTime;
+                var minutes = Math.floor(user_currentTime / 60);
+                var seconds = user_currentTime % 60;
+                $('#container_time').html("Your time: "+minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0')+"");
+        
+        
+                //html_answered_stats = "You have reached <b>" + good + "</b> of <b>" + question_quantity + "</b> points.";
+                let html_answered_stats = `<table id="stats_percents_table">
+                    <tr>
+                        <td class="text">
+                            Average score
+                        </td>
+                        <td>
+                            <div>${percent_answer_test}%</div>
+                            <div class="gray_bar">
+                                <div class="average_bar" style="width:${percent_answer_test}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text">
+                            Your score
+                        </td>
+                        <td>
+                            <div>${Math.round((good/question_quantity)*100)}%</div>
+                            <div class="gray_bar">
+                                <div class="my_bar" style="width:${Math.round((good/question_quantity)*100)}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                
+                </table>`;
+
+                let html_container_stats_chart_js = `
+                <div class="container_all_canvas">
+                    ${html_stat_chart_js}
+                </div>
+                `;
+        
+        
+                $('#container_answered_stats').html(html_answered_stats+html_container_stats_chart_js)
+        
+                
+                if(Math.round((good/question_quantity)*100)>=75){
+                    $('#container_message').html(message_passed)
+                    $('#container_message').addClass('passed')
+                }
+                else{
+
+                    if(Math.round((good/question_quantity)*100)>=50){
+                        $('#container_message').addClass('almostpassed')
+                        $('#container_message').html(message_almost_passed);
+                    }
+                    else{
+                        $('#container_message').addClass('failed')
+                        $('#container_message').html(message_failed);
+                    }
+                }
+        
+
+
+
+                
+
+                load_chart_js( function(){
+                    var ctx = [];
+                    var config = [];
+                    for(var i=0;i<Object.keys(label_names).length;i++){
+                        var currentCategoryKey = Object.keys(label_names)[i];
+
+                        var nombres_subcategorias = label_names[currentCategoryKey]
+                        var aciertos_subcategorias = aciertos[currentCategoryKey]
+                        var cantidad_subcategorias = cantidad[currentCategoryKey]
+                        var colores_subcategorias = color_names[currentCategoryKey]
+                        var nombres_subcategorias_sub = Array.from(label_names[currentCategoryKey]);
+                        var colores_subcategorias_sub = Array.from(color_names[currentCategoryKey]);
+
+
+                        for(var k=0;k<colores_subcategorias_sub.length;k++){
+                            colores_subcategorias_sub[k]=colores_subcategorias_sub[k]+"DD";
+                        }
+
+                        var porcentaje = Math.round(100*((aciertos_subcategorias.reduce((partialSum, a) => partialSum + a, 0) - (aciertos_subcategorias[aciertos_subcategorias.length-1])) / cantidad_subcategorias.reduce((partialSum, a) => partialSum + a, 0)),2)
+                        var fraccion = (aciertos_subcategorias.reduce((partialSum, a) => partialSum + a, 0) - (aciertos_subcategorias[aciertos_subcategorias.length-1])) + "/" + (cantidad_subcategorias.reduce((partialSum, a) => partialSum + a, 0))
+
+                        nombres_subcategorias_sub.push("Incorrect answers")
+                        colores_subcategorias_sub.push("#00000088")
+                        colores_subcategorias.push("#00000088")
+                        cantidad_subcategorias.push(0)
+                        ctx[i] = $('.pie[data-category="'+currentCategoryKey+'"]')[0].getContext('2d');
+
+
+
+                        
+                        let total_preguntas = aciertos_subcategorias.reduce(function(acumulador, valorActual) {
+                            return acumulador + valorActual;
+                        }, 0);
+
+                        let leyenda_queso = "<div class='leyenda'>";
+                        for(let contador_leyenda=0; contador_leyenda<aciertos_subcategorias.length; contador_leyenda++){
+                            if(aciertos_subcategorias[contador_leyenda] != 0){
+                                let acertadas_subcategoria = aciertos_subcategorias[contador_leyenda];
+                                let total_subcategoria = cantidad_subcategorias[contador_leyenda] == 0 ? total_preguntas : cantidad_subcategorias[contador_leyenda]
+                                let porcentaje_subcategoria = Math.round((acertadas_subcategoria / total_subcategoria) *100)
+                                leyenda_queso += `
+                                <div class='leyenda_sub'>
+                                    <div class='color_leyenda' style='background:${colores_subcategorias_sub[contador_leyenda]}'></div>
+                                    <div class='nombre_leyenda'>${nombres_subcategorias_sub[contador_leyenda]}: <b>${acertadas_subcategoria}/${total_subcategoria} (${porcentaje_subcategoria}%)</b></div>
+                                </div> `;
+                            }
+                        }
+                        leyenda_queso += "</div>";
+
+
+
+                        config[i] = {
+                            type: 'doughnut',
+                            data: {
+                                datasets: [
+                                    // {
+                                    //     data: cantidad_subcategorias,
+                                    //     backgroundColor: colores_subcategorias
+                                    // },
+                                    {
+                                        data: aciertos_subcategorias,
+                                        backgroundColor: colores_subcategorias_sub,
+                                        borderWidth: 1
+                                    }
+                                ],
+                                labels: nombres_subcategorias_sub
+                            },
+                            options: {
+                                responsive: true,
+                                cutout: 60,
+                                plugins:{
+                                    legend:{
+                                        display:false,
+                                        position:'bottom',
+                                        onClick: null
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            //label: crearCallback(nombres_subcategorias, cantidad_subcategorias,aciertos_subcategorias)
+                                            label: crearCallback2(nombres_subcategorias, cantidad_subcategorias,aciertos_subcategorias)
+                                        }
+                                    }
+                                },
+                                elements:{
+                                    center:{
+                                        text: porcentaje
+                                    }
+                                }
+                            }
+                        };
+
+                        new Chart(ctx[i], config[i]);
+                        
+                        
+                        $('.pie[data-category="'+currentCategoryKey+'"]').parent().find(".nombre_categoria").html($('.pie[data-category="'+currentCategoryKey+'"]').parent().find(".nombre_categoria").html() + fraccion + " (" + porcentaje + "%) ")
+                        $('.pie[data-category="'+currentCategoryKey+'"]').parent().find(".nombre_categoria").before(leyenda_queso);
+                    }
+                    
+                });    
+                
+
+
+                function crearCallback2(nombres_subcategorias, cantidad_subcategorias,aciertos_subcategorias) {
+                    return function(context) {
+                        let indice_preguntas_totales = nombres_subcategorias.indexOf(context.label);
+
+                        var index = context.dataIndex;
+                        var value = aciertos_subcategorias[index] 
+                        if(context.datasetIndex==0){
+                            if(context.label == "Incorrect answers"){
+                                let total = context.dataset.data.reduce((acumulador, valorActual, indice, array) => {
+                                    if (indice < array.length) {
+                                        return acumulador + valorActual;
+                                    } else {
+                                        return acumulador;
+                                    }
+                                }, 0);
+                                return context.label + ': ' + value + '/' + total + ''; // in this category
+                            }
+                            let total = cantidad_subcategorias[indice_preguntas_totales];
+                            return context.label + ': ' + value + '/' + total;
+                        }
+                        return context.label + ': ' + value;
+                    };
+                }
+
+                function crearCallback(nombres_subcategorias, cantidad_subcategorias) {
+                    return function(context) {
+                        let indice_preguntas_totales = nombres_subcategorias.indexOf(context.label);
+                        var index = context.dataIndex;
+                        var value = context.dataset.data[index];
+                        if(context.datasetIndex==0){
+                            if(context.label == "Incorrect answers"){
+                                let total = context.dataset.data.reduce((acumulador, valorActual, indice, array) => {
+                                    if (indice < array.length) {
+                                        return acumulador + valorActual;
+                                    } else {
+                                        return acumulador;
+                                    }
+                                }, 0);
+                                return context.label + ': ' + value + '/' + total + ''; // in this category
+                            }
+                            let total = cantidad_subcategorias[indice_preguntas_totales];
+                            return context.label + ': ' + value + '/' + total;
+                        }
+                        return context.label + ': ' + value;
+                    };
+                }
+
+
+
+
+
+            },
+            error : function(error) {
+                console.log(error)
+            }
+        })
+    }
+
+    $("#test-data").remove();
+
+
+
+
+    /* BOTON AUDIO PREGUNTA */
+    $('.play_icon').click(function() {
+        var $audio_player = $(this).parent().find('.audio_player')[0]; 
+        if (!$audio_player.paused && !$audio_player.ended) {
+            // $(this).html('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M560-131v-82q90-26 145-100t55-168q0-94-55-168T560-749v-82q124 28 202 125.5T840-481q0 127-78 224.5T560-131ZM120-360v-240h160l200-200v640L280-360H120Zm440 40v-322q47 22 73.5 66t26.5 96q0 51-26.5 94.5T560-320ZM400-606l-86 86H200v80h114l86 86v-252ZM300-480Z"/></svg>');
+            $(this).removeClass("playing");
+
+            $audio_player.pause();
+            $audio_player.currentTime = 0; 
+        } else {
+            // $(this).html('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M792-56 671-177q-25 16-53 27.5T560-131v-82q14-5 27.5-10t25.5-12L480-368v208L280-360H120v-240h128L56-792l56-56 736 736-56 56Zm-8-232-58-58q17-31 25.5-65t8.5-70q0-94-55-168T560-749v-82q124 28 202 125.5T840-481q0 53-14.5 102T784-288ZM650-422l-90-90v-130q47 22 73.5 66t26.5 96q0 15-2.5 29.5T650-422ZM480-592 376-696l104-104v208Zm-80 238v-94l-72-72H200v80h114l86 86Zm-36-130Z"/></svg>');
+            $(this).addClass("playing");
+            $audio_player.play();
+        }
+
+        $($audio_player).on('ended', function(){
+            // $(this).html('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M560-131v-82q90-26 145-100t55-168q0-94-55-168T560-749v-82q124 28 202 125.5T840-481q0 127-78 224.5T560-131ZM120-360v-240h160l200-200v640L280-360H120Zm440 40v-322q47 22 73.5 66t26.5 96q0 51-26.5 94.5T560-320ZM400-606l-86 86H200v80h114l86 86v-252ZM300-480Z"/></svg>');
+            $(this).parent().find(".play_icon").removeClass("playing");
+        });
+    });
+
+
+
+
+
+
+    
+
+
+    /* QUITAR EL CLICK DERECHO */
+    // $('body').bind('cut copy paste', function (e) {
+    //     e.preventDefault();
+    // });
+    // $("body").on("contextmenu",function(e){
+    //     return false;
+    // });
+
+    
+
+
+
+})
+
+
+

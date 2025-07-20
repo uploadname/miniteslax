@@ -1,0 +1,32 @@
+/* BOTONES DE "TEST YOUR KNOWLEDGE" Y "CHAPTER X" */
+.buttons_study_materials_container{
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.buttons_study_materials_container a.button_chapter{
+    margin-top: 24px;
+    background: #2d89ef;
+    -webkit-box-shadow: inset 0px 1px 0px #fff, 0px 5px 0px #1848bf, 1px 7px 7px 3px rgba(0,0,0,0.3);
+    -moz-box-shadow: inset 0px 1px 0px #fff,0px 5px 0px #1848bf,1px 7px 7px 3px rgba(0,0,0,0.3);
+    box-shadow: inset 0px 1px 0px #fff, 0px 5px 0px #1848bf, 1px 7px 7px 3px rgba(0,0,0,0.3);
+    text-transform: uppercase;
+    color: white;
+    font-weight: 700;
+    border-radius: 25px;
+    padding: 15px 40px;
+    display: flex;
+    gap: 8px;
+    transition: transform 0.2s;
+    font-family: Arial, Helvetica, sans-serif;
+
+}
+.buttons_study_materials_container a.button_chapter i{
+    line-height: 25px;
+}
+.buttons_study_materials_container a.button_chapter:active{
+    transform: translateY(4px);
+}
